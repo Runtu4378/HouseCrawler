@@ -4,11 +4,15 @@ import json
 import time
 import xlwt
 import os
+import re
 
 from pyquery import PyQuery as pq
 
 # 每个地区获取的页数
-PAGE_COUNT = 1
+PAGE_COUNT = 6
+
+# 每次调用接口之后的时间间隔
+SLEEP_TIME = 1
 
 # 保存的文件名
 EXCEL_NAME = "数据表.xls"
@@ -49,50 +53,29 @@ CITY_AND_AREA = [
 def startGetData(url):
     print(url)
     doc = pq(url=url)
-
-    titles = doc('.content__list--item[data-ad_code="0"] .content__list--item--aside')
-    titleList = []
-    hrefList = []
-    for item in titles.items():
-        titleList.append(item.attr("title"))
-        hrefList.append("https://sh.zu.ke.com" + item.attr("href"))
-
-    imgs = doc('.content__list--item[data-ad_code="0"] .content__list--item--aside img')
-    imgList = []
-    for item in imgs.items():
-        img = item.attr("data-src")
-        imgList.append(img)
-
-    locations = doc(".content__list--item--des")
-    locationList = []
-    for item in locations.items():
-        locationList.append(item.text().strip())
-
-    unitPrices = doc(".content__list--item-price")
-    unitPriceList = []
-    for item in unitPrices.items():
-        unitPriceList.append(item.text().strip())
-
-    timeInfos = doc(".content__list--item--time.oneline")
-    timeInfoList = []
-    for item in timeInfos.items():
-        timeInfoList.append(item.text().strip())
-
-    tags = doc(".content__list--item--bottom.oneline")
-    tagList = []
-    for item in tags.items():
-        tagList.append(item.text().strip())
-
     i = 0
-    for item in imgList:
+
+    dataItems = doc('.content__list--item[data-ad_code="0"]')
+    for item in dataItems.items():
+        # 标题
+        title = item.find(".content__list--item--aside").attr("title")
+        # 小区
+        neighborhood = item.find(".content__list--item--des a").text().replace(" ", "/")
+
+        itemDesc = item.find(".content__list--item--des").text().split("/")
+        # 大小
+        size = float(re.search(r"\d+(.)\d+", itemDesc[1]).group())
+        # 户型
+        room_type = itemDesc[3].strip()
+        # 租金
+        rant = item.find(".content__list--item-price > em").text()
+
         yield {
-            "title": titleList[i],  # 标题
-            "unitPrice": unitPriceList[i],  # 租金
-            "location": locationList[i],  # 地址
-            "time": timeInfoList[i],  # 发布时间
-            "tag": tagList[i],  # 标签
-            "href": hrefList[i],  # 跳转链接
-            "image": imgList[i],  # 图片
+            "title": title,
+            "neighborhood": neighborhood,
+            "size": size,
+            "room_type": room_type,
+            "rant": int(rant),
         }
         i += 1
 
@@ -120,7 +103,7 @@ def generate_excel_data(houses):
         )
 
     result = list(zip(header_array, *data_array))
-    print(result)
+    # print(result)
     return result
 
 
@@ -147,14 +130,35 @@ def write_to_excel(excel_data):
 
 
 if __name__ == "__main__":
+    house_data = []
+
     for city in CITY_AND_AREA:
         for area in city["areas"]:
             for i in range(PAGE_COUNT):
-                write_to_file("---" + area["text"] + "---")
-                realUrl = area["href"] + "pg" + str(i + 1) + "/"
+                # url拼接
+                realUrl = area["href"] + "pg" + str(i + 1)
+                realUrl += "ab200301001000"  # 限制为链家房源
+                realUrl += "rt200600000001"  # 限制为整租
+                realUrl += "/"
+
                 houses = startGetData(realUrl)
                 for house in houses:
-                    write_to_file(house)
+                    # print(house)
+                    # continue
+
+                    house_data.append(
+                        {
+                            "city": city["name"],
+                            "area": area["text"],
+                            "size": house["size"],
+                            "neighborhood": house["neighborhood"],
+                            "room_type": house["room_type"],
+                            "rant": house["rant"],
+                        }
+                    )
                 # 增加延时，避免被 block
-                time.sleep(1)
+                time.sleep(SLEEP_TIME)
+
+    excel_data = generate_excel_data(house_data)
+    write_to_excel(excel_data)
     print("complete")
