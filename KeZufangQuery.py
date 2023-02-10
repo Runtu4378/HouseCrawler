@@ -49,9 +49,14 @@ CITY_AND_AREA = [
     }
 ]
 
+# 断档续传缓存路径
+TEMP_PATH = os.getcwd() + "/.temp"
+
 
 def startGetData(url):
-    print(url)
+    print("[start] " + url)
+
+    result = []
     doc = pq(url=url)
     i = 0
 
@@ -70,19 +75,57 @@ def startGetData(url):
         # 租金
         rant = item.find(".content__list--item-price > em").text()
 
-        yield {
-            "title": title,
-            "neighborhood": neighborhood,
-            "size": size,
-            "room_type": room_type,
-            "rant": int(rant),
-        }
+        result.append(
+            {
+                "title": title,
+                "neighborhood": neighborhood,
+                "size": size,
+                "room_type": room_type,
+                "rant": int(rant),
+            }
+        )
         i += 1
+
+    print("[finished]\n")
+    return result
 
 
 def write_to_file(content):
-    with open("chengjiao.txt", "a", encoding="utf-8") as f:
+    with open("chengjiao.txt", "r", encoding="utf-8") as f:
         f.write(json.dumps(content, ensure_ascii=False) + ",\n")
+
+
+# 读取缓存
+def readTemp():
+    result = []
+    try:
+        f = open(TEMP_PATH, "r", encoding="utf-8")
+    except FileNotFoundError as e:
+        return
+
+    lines = f.readlines()
+    if len(lines) == 0:
+        f.close()
+        os.remove(TEMP_PATH)
+        return
+
+    result.append(lines[0].strip("\n"))
+    result.append(json.loads(lines[1]))
+
+    f.close()
+    os.remove(TEMP_PATH)
+    return result
+
+
+# 保存缓存
+def saveTemp(currentUrl, data):
+    with open(TEMP_PATH, "a", encoding="utf-8") as f:
+        f.write(currentUrl)
+        f.write("\n")
+        f.write(json.dumps(data, ensure_ascii=False))
+        f.close()
+    print("end at: " + currentUrl)
+    print("already save temp")
 
 
 # 生成 excel 需要的数据格式
@@ -131,33 +174,62 @@ def write_to_excel(excel_data):
 
 if __name__ == "__main__":
     house_data = []
+    realUrlPrev = ""
 
-    for city in CITY_AND_AREA:
-        for area in city["areas"]:
-            for i in range(PAGE_COUNT):
-                # url拼接
-                realUrl = area["href"] + "pg" + str(i + 1)
-                realUrl += "ab200301001000"  # 限制为链家房源
-                realUrl += "rt200600000001"  # 限制为整租
-                realUrl += "/"
+    tempUrl = ""
 
-                houses = startGetData(realUrl)
-                for house in houses:
-                    # print(house)
-                    # continue
+    temp = readTemp()
+    if temp:
+        print("get temp")
+        tempUrl = temp[0]
+        house_data = temp[1]
 
-                    house_data.append(
-                        {
-                            "city": city["name"],
-                            "area": area["text"],
-                            "size": house["size"],
-                            "neighborhood": house["neighborhood"],
-                            "room_type": house["room_type"],
-                            "rant": house["rant"],
-                        }
-                    )
-                # 增加延时，避免被 block
-                time.sleep(SLEEP_TIME)
+    try:
+        for city in CITY_AND_AREA:
+            for area in city["areas"]:
+                for i in range(PAGE_COUNT):
+                    # url拼接
+                    realUrl = area["href"] + "pg" + str(i + 1)
+                    realUrl += "ab200301001000"  # 限制为链家房源
+                    realUrl += "rt200600000001"  # 限制为整租
+                    realUrl += "/"
+                    if i == 0:
+                        realUrlPrev = realUrl
+
+                    if tempUrl != "" and realUrl != tempUrl:
+                        print("[skip] " + realUrl + "\n")
+                        continue
+                    elif realUrl == tempUrl:
+                        tempUrl = ""
+
+                    houses = startGetData(realUrl)
+                    for house in houses:
+                        # print(house)
+                        # continue
+
+                        house_data.append(
+                            {
+                                "city": city["name"],
+                                "area": area["text"],
+                                "size": house["size"],
+                                "neighborhood": house["neighborhood"],
+                                "room_type": house["room_type"],
+                                "rant": house["rant"],
+                            }
+                        )
+
+                    realUrlPrev = realUrl
+                    # 增加延时，避免被 block
+                    time.sleep(SLEEP_TIME)
+
+    except Exception as e:
+        print("meet error: %s" % e)
+
+        # 启用断档续传功能
+        saveTemp(realUrlPrev, house_data)
+
+    # 数组去重
+    # TODO
 
     excel_data = generate_excel_data(house_data)
     write_to_excel(excel_data)
