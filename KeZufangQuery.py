@@ -245,7 +245,7 @@ def startGetData(url):
         # 小区
         neighborhood = item.find(".content__list--item--des a").text().replace(" ", "/")
 
-        itemDesc = item.find(".content__list--item--des").text().split("/")
+        itemDesc = item.find(".content__list--item--des").text().split(" /")
         # 大小
         size = float(re.search(r"\d+(.)\d+", itemDesc[1]).group())
         # 户型
