@@ -373,12 +373,12 @@ def write_to_excel(excel_data):
 
 
 if __name__ == "__main__":
-    test = startGetData(
-        "https://bj.zu.ke.com/zufang/dongcheng/pg1ab200301001000rt200600000001/",
-        CITY_AND_AREA[0],
-    )
-    print(test)
-    exit()
+    # test = startGetData(
+    #     "https://bj.zu.ke.com/zufang/dongcheng/pg1ab200301001000rt200600000001/",
+    #     CITY_AND_AREA[0],
+    # )
+    # print(test)
+    # exit()
 
     try:
         house_data = []
