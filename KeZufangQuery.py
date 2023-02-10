@@ -245,9 +245,9 @@ def startGetData(url):
         # 小区
         neighborhood = item.find(".content__list--item--des a").text().replace(" ", "/")
 
-        itemDesc = item.find(".content__list--item--des").text().split(" /")
+        itemDesc = item.find(".content__list--item--des").text()
         # 大小
-        size = float(re.search(r"\d+(.)\d+", itemDesc[1]).group())
+        size = float(re.search("\d{1,}(\.\d{1,}){0,1}(?=㎡)", itemDesc).group())
         # 户型
         room_type = itemDesc[3].strip()
         # 租金
@@ -351,6 +351,12 @@ def write_to_excel(excel_data):
 
 
 if __name__ == "__main__":
+    test = startGetData(
+        "https://bj.zu.ke.com/zufang/dongcheng/pg1ab200301001000rt200600000001/"
+    )
+    print(test)
+    exit()
+
     try:
         house_data = []
         realUrlPrev = ""
