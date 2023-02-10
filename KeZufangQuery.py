@@ -36,6 +36,7 @@ CITY_AND_AREA = [
     {
         "key": "bj",
         "name": "北京",
+        "origin": "https://bj.zu.ke.com",
         "areas": [
             {"href": "https://bj.zu.ke.com/zufang/dongcheng/", "text": "东城"},
             {"href": "https://bj.zu.ke.com/zufang/xicheng/", "text": "西城"},
@@ -59,6 +60,7 @@ CITY_AND_AREA = [
     {
         "key": "dg",
         "name": "东莞",
+        "origin": "https://dg.zu.ke.com",
         "areas": [
             {"href": "https://dg.zu.ke.com/zufang/nanchengqu/", "text": "南城区"},
             {"href": "https://dg.zu.ke.com/zufang/dongchengqu/", "text": "东城区"},
@@ -101,6 +103,7 @@ CITY_AND_AREA = [
     {
         "key": "fs",
         "name": "佛山",
+        "origin": "https://fs.zu.ke.com",
         "areas": [
             {"href": "https://fs.zu.ke.com/zufang/chancheng/", "text": "禅城"},
             {"href": "https://fs.zu.ke.com/zufang/nanhai/", "text": "南海"},
@@ -112,6 +115,7 @@ CITY_AND_AREA = [
     {
         "key": "gz",
         "name": "广州",
+        "origin": "https://gz.zu.ke.com",
         "areas": [
             {"href": "https://gz.zu.ke.com/zufang/tianhe/", "text": "天河"},
             {"href": "https://gz.zu.ke.com/zufang/yuexiu/", "text": "越秀"},
@@ -129,6 +133,7 @@ CITY_AND_AREA = [
     {
         "key": "hz",
         "name": "杭州",
+        "origin": "https://hz.zu.ke.com",
         "areas": [
             {"href": "https://hz.zu.ke.com/zufang/fuyang/", "text": "富阳"},
             {"href": "https://hz.zu.ke.com/zufang/jiande/", "text": "建德"},
@@ -150,6 +155,7 @@ CITY_AND_AREA = [
     {
         "key": "sz",
         "name": "深圳",
+        "origin": "https://sz.zu.ke.com",
         "areas": [
             {"href": "https://sz.zu.ke.com/zufang/luohuqu/", "text": "罗湖区"},
             {"href": "https://sz.zu.ke.com/zufang/futianqu/", "text": "福田区"},
@@ -166,6 +172,7 @@ CITY_AND_AREA = [
     {
         "key": "wh",
         "name": "武汉",
+        "origin": "https://wh.zu.ke.com",
         "areas": [
             {"href": "https://wh.zu.ke.com/zufang/jiangan/", "text": "江岸"},
             {"href": "https://wh.zu.ke.com/zufang/jianghan/", "text": "江汉"},
@@ -187,6 +194,7 @@ CITY_AND_AREA = [
     {
         "key": "zs",
         "name": "中山",
+        "origin": "https://zs.zu.ke.com",
         "areas": [
             {"href": "https://zs.zu.ke.com/zufang/dongqu/", "text": "东区"},
             {"href": "https://zs.zu.ke.com/zufang/xiqu/", "text": "西区"},
@@ -217,6 +225,7 @@ CITY_AND_AREA = [
     {
         "key": "zh",
         "name": "珠海",
+        "origin": "https://zh.zu.ke.com",
         "areas": [
             {"href": "https://zh.zu.ke.com/zufang/xiangzhouqu/", "text": "香洲区"},
             {"href": "https://zh.zu.ke.com/zufang/jinwanqu/", "text": "金湾区"},
@@ -231,7 +240,7 @@ CITY_AND_AREA = [
 TEMP_PATH = os.getcwd() + "/.temp"
 
 
-def startGetData(url):
+def startGetData(url, cityConfig):
     print("[start] " + url)
 
     result = []
@@ -240,6 +249,12 @@ def startGetData(url):
 
     dataItems = doc('.content__list--item[data-ad_code="0"]')
     for item in dataItems.items():
+        # 房屋编号
+        code = item.attr("data-house_code")
+        # 详情链接
+        href = cityConfig["origin"] + item.find(".content__list--item--aside").attr(
+            "href"
+        )
         # 标题
         title = item.find(".content__list--item--aside").attr("title")
         # 小区
@@ -260,11 +275,13 @@ def startGetData(url):
 
         result.append(
             {
+                "code": code,
                 "title": title,
                 "neighborhood": neighborhood,
                 "size": size,
                 "room_type": room_type,
                 "rant": int(rant),
+                "href": href,
             }
         )
         i += 1
@@ -357,7 +374,8 @@ def write_to_excel(excel_data):
 
 if __name__ == "__main__":
     test = startGetData(
-        "https://bj.zu.ke.com/zufang/dongcheng/pg1ab200301001000rt200600000001/"
+        "https://bj.zu.ke.com/zufang/dongcheng/pg1ab200301001000rt200600000001/",
+        CITY_AND_AREA[0],
     )
     print(test)
     exit()
@@ -390,7 +408,7 @@ if __name__ == "__main__":
                         elif realUrl == tempUrl:
                             tempUrl = ""
 
-                        houses = startGetData(realUrl)
+                        houses = startGetData(realUrl, city)
                         for house in houses:
                             # print(house)
                             # continue
