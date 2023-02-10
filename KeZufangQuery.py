@@ -249,7 +249,12 @@ def startGetData(url):
         # 大小
         size = float(re.search("\d{1,}(\.\d{1,}){0,1}(?=㎡)", itemDesc).group())
         # 户型
-        room_type = itemDesc[3].strip()
+        try:
+            room_type = re.search("\S+\d+卫", itemDesc).group()
+        except Exception as e:
+            print("[户型字段]: %s" % itemDesc)
+            print("[户型字段] 无法匹配: %s" % e)
+            raise e
         # 租金
         rant = item.find(".content__list--item-price > em").text()
 
