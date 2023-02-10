@@ -351,64 +351,62 @@ def write_to_excel(excel_data):
 
 
 if __name__ == "__main__":
-    house_data = []
-    realUrlPrev = ""
-
-    tempUrl = ""
-
-    temp = readTemp()
-    if temp:
-        print("get temp")
-        tempUrl = temp[0]
-        house_data = temp[1]
-
     try:
-        for city in CITY_AND_AREA:
-            for area in city["areas"]:
-                for i in range(PAGE_COUNT):
-                    # url拼接
-                    realUrl = area["href"] + "pg" + str(i + 1)
-                    realUrl += "ab200301001000"  # 限制为链家房源
-                    realUrl += "rt200600000001"  # 限制为整租
-                    realUrl += "/"
-                    if i == 0:
+        house_data = []
+        realUrlPrev = ""
+
+        tempUrl = ""
+
+        temp = readTemp()
+        if temp:
+            print("get temp")
+            tempUrl = temp[0]
+            house_data = temp[1]
+            for city in CITY_AND_AREA:
+                for area in city["areas"]:
+                    for i in range(PAGE_COUNT):
+                        # url拼接
+                        realUrl = area["href"] + "pg" + str(i + 1)
+                        realUrl += "ab200301001000"  # 限制为链家房源
+                        realUrl += "rt200600000001"  # 限制为整租
+                        realUrl += "/"
+                        if i == 0:
+                            realUrlPrev = realUrl
+
+                        if tempUrl != "" and realUrl != tempUrl:
+                            print("[skip] " + realUrl + "\n")
+                            continue
+                        elif realUrl == tempUrl:
+                            tempUrl = ""
+
+                        houses = startGetData(realUrl)
+                        for house in houses:
+                            # print(house)
+                            # continue
+
+                            house_data.append(
+                                {
+                                    "city": city["name"],
+                                    "area": area["text"],
+                                    "size": house["size"],
+                                    "neighborhood": house["neighborhood"],
+                                    "room_type": house["room_type"],
+                                    "rant": house["rant"],
+                                }
+                            )
+
                         realUrlPrev = realUrl
+                        # 增加延时，避免被 block
+                        time.sleep(SLEEP_TIME)
 
-                    if tempUrl != "" and realUrl != tempUrl:
-                        print("[skip] " + realUrl + "\n")
-                        continue
-                    elif realUrl == tempUrl:
-                        tempUrl = ""
+        # 数组去重
+        # TODO
 
-                    houses = startGetData(realUrl)
-                    for house in houses:
-                        # print(house)
-                        # continue
-
-                        house_data.append(
-                            {
-                                "city": city["name"],
-                                "area": area["text"],
-                                "size": house["size"],
-                                "neighborhood": house["neighborhood"],
-                                "room_type": house["room_type"],
-                                "rant": house["rant"],
-                            }
-                        )
-
-                    realUrlPrev = realUrl
-                    # 增加延时，避免被 block
-                    time.sleep(SLEEP_TIME)
-
+        excel_data = generate_excel_data(house_data)
+        write_to_excel(excel_data)
+        print("complete")
     except Exception as e:
         print("meet error: %s" % e)
 
         # 启用断档续传功能
         saveTemp(realUrlPrev, house_data)
-
-    # 数组去重
-    # TODO
-
-    excel_data = generate_excel_data(house_data)
-    write_to_excel(excel_data)
-    print("complete")
