@@ -12,5 +12,5 @@
 python3 KeZufangQuery.py
 
 # 打包为可执行文件
-Pyinstaller -F -w -i biao.ico KeZufangQuery.py
+Pyinstaller -F -i biao.ico KeZufangQuery.py
 ```
