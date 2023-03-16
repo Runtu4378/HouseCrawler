@@ -330,7 +330,7 @@ def saveTemp(currentUrl, data):
 
 # 生成 excel 需要的数据格式
 def generate_excel_data(houses):
-    header_array = ["城市", "行政区", "面积", "小区名称", "户型", "租金"]
+    header_array = ["城市", "行政区", "面积", "小区名称", "户型", "租金", "房源链接"]
     data_array = []
 
     for house in houses:
@@ -342,6 +342,7 @@ def generate_excel_data(houses):
                 house["neighborhood"],
                 house["room_type"],
                 house["rant"],
+                house["href"],
             ]
         )
 
@@ -373,11 +374,20 @@ def write_to_excel(excel_data):
 
 
 if __name__ == "__main__":
+    # testArea = CITY_AND_AREA[0]
     # test = startGetData(
     #     "https://bj.zu.ke.com/zufang/dongcheng/pg1ab200301001000rt200600000001/",
-    #     CITY_AND_AREA[0],
+    #     testArea,
     # )
+
+    # for index in range(len(test)):
+    #     test[index]["city"] = testArea["name"]
+    #     test[index]["area"] = "东城"
+
     # print(test)
+    # excel_data = generate_excel_data(test)
+    # write_to_excel(excel_data)
+    # print("complete")
     # exit()
 
     try:
@@ -422,6 +432,7 @@ if __name__ == "__main__":
                                 "neighborhood": house["neighborhood"],
                                 "room_type": house["room_type"],
                                 "rant": house["rant"],
+                                "href": house["href"],
                             }
                         )
 
