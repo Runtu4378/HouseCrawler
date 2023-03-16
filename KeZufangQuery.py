@@ -14,8 +14,12 @@ PAGE_COUNT = 6
 # 每次调用接口之后的时间间隔
 SLEEP_TIME = 0.6
 
+CWD = os.getcwd()
+
 # 保存的文件名
 EXCEL_NAME = "数据表.xls"
+
+EXCEL_PATH = os.path.join(CWD, EXCEL_NAME)
 
 # 获取各区域的首页链接
 # 北京: https://bj.zu.ke.com/zufang
@@ -237,7 +241,7 @@ CITY_AND_AREA = [
 ]
 
 # 断档续传缓存路径
-TEMP_PATH = os.getcwd() + "/.temp"
+TEMP_PATH = os.path.join(CWD, ".temp")
 
 EXCEL_HEADER_CONFIG = ["城市", "行政区", "面积", "小区名称", "户型", "租金", "房源链接"]
 
@@ -377,28 +381,36 @@ def write_to_excel(excel_data):
             y += 1
             x = 0
 
-        file_path = os.path.dirname(os.path.realpath(__file__))
-        work_book.save(file_path + "/" + EXCEL_NAME)
+        work_book.save(EXCEL_PATH)
     except Exception as e:
         print(e)
 
 
 if __name__ == "__main__":
-    # testArea = CITY_AND_AREA[0]
-    # test = startGetData(
-    #     "https://bj.zu.ke.com/zufang/dongcheng/pg1ab200301001000rt200600000001/",
-    #     testArea,
-    # )
+    print("[config check] start")
+    print("  当前运行路径                CWD: %s" % CWD)
+    print("  断点续传文件路径      TEMP_PATH: %s" % TEMP_PATH)
+    print("  生成的excel文件路径  EXCEL_PATH: %s" % EXCEL_PATH)
+    print("[config check] end\n")
 
-    # for index in range(len(test)):
-    #     test[index]["city"] = testArea["name"]
-    #     test[index]["area"] = "东城"
+    ifLocalTest = False
 
-    # print(test)
-    # excel_data = generate_excel_data(test)
-    # write_to_excel(excel_data)
-    # print("complete")
-    # exit()
+    if ifLocalTest:
+        testArea = CITY_AND_AREA[0]
+        test = startGetData(
+            "https://bj.zu.ke.com/zufang/dongcheng/pg1ab200301001000rt200600000001/",
+            testArea,
+        )
+
+        for index in range(len(test)):
+            test[index]["city"] = testArea["name"]
+            test[index]["area"] = "东城"
+
+        print(test)
+        excel_data = generate_excel_data(test)
+        write_to_excel(excel_data)
+        print("complete")
+        exit()
 
     try:
         house_data = []
