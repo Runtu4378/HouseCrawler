@@ -239,6 +239,8 @@ CITY_AND_AREA = [
 # 断档续传缓存路径
 TEMP_PATH = os.getcwd() + "/.temp"
 
+EXCEL_HEADER_CONFIG = ["城市", "行政区", "面积", "小区名称", "户型", "租金", "房源链接"]
+
 
 def startGetData(url, cityConfig):
     print("[start] " + url)
@@ -330,7 +332,6 @@ def saveTemp(currentUrl, data):
 
 # 生成 excel 需要的数据格式
 def generate_excel_data(houses):
-    header_array = ["城市", "行政区", "面积", "小区名称", "户型", "租金", "房源链接"]
     data_array = []
 
     for house in houses:
@@ -346,7 +347,7 @@ def generate_excel_data(houses):
             ]
         )
 
-    result = list(zip(header_array, *data_array))
+    result = list(zip(EXCEL_HEADER_CONFIG, *data_array))
     # print(result)
     return result
 
@@ -361,8 +362,17 @@ def write_to_excel(excel_data):
         x = 0
         y = 0
         for column in excel_data:
+            headerText = column[0]
             for cell in column:
-                sheet.write(x, y, cell)
+                if headerText == "房源链接" and x != 0:
+                    sheet.write(
+                        x,
+                        y,
+                        xlwt.Formula('HYPERLINK("' + cell + '";"' + cell + '")'),
+                        xlwt.easyxf("font: colour_index 4, underline True"),
+                    )
+                else:
+                    sheet.write(x, y, cell)
                 x += 1
             y += 1
             x = 0
