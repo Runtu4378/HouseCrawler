@@ -55,3 +55,41 @@ def formatSeconds(seconds, timeFormat="HH:mm:ss"):
         timeFormat = timeFormat.replace("s", str(seconds))
 
     return timeFormat
+
+
+def readLocalConfig(filePath):
+    """
+    读取本地配置文件
+
+    Args:
+        filePath (str): 配置文件路径
+
+    Returns:
+        dict: 配置项字典，键为变量名，值为变量值
+    """
+    config = {}
+    with open(filePath, "r") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            key_value = line.strip().split("=")
+            key = key_value[0].strip()
+            value = key_value[1].strip()
+
+            if "," in value:
+                value = [i.strip() for i in value.split(",")]
+
+            config[key] = value
+    return config
+
+
+def generateString(length, str1, str2):
+    """
+    :param length: int类型，生成字符串长度
+    :param str1: string类型，第一个字符串
+    :param str2: string类型，第二个字符串
+    :return: 返回一个由str1和str2按照空格拼接后重复直到该字符串长度为len得到的新字符串
+    """
+    concatStr = str1 + " " * (length - len(str1) - len(str2)) + str2
+
+    return concatStr

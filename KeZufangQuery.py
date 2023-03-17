@@ -152,22 +152,39 @@ def write_to_excel(excel_data):
         print(e)
 
 
-def calcAreaNumber():
+def calcAreaNumber(list):
     sum = 0
 
-    for city in config.CITY_AND_AREA:
+    for city in list:
         for area in city["areas"]:
             sum += 1
 
     return sum
 
 
+def filter_list(list_data, exclude_cities):
+    """
+    根据 exclude_cities 列表中的元素过滤 list_data 中的元素
+    :param list_data: 元祖列表
+    :param exclude_cities: 排除城市名称列表
+    :return: 过滤后的元祖列表
+    """
+    return [item for item in list_data if item["name"] not in exclude_cities]
+
+
 if __name__ == "__main__":
+    extraConfig = None
+
+    if os.path.exists(config.CONFIG_PATH):
+        extraConfig = utils.readLocalConfig(config.CONFIG_PATH)
+
     print("[config check] start")
     print("  当前版本: %s\n" % config.VERSION)
     print("  当前运行路径                CWD: %s" % config.CWD)
     print("  断点续传文件路径      TEMP_PATH: %s" % config.TEMP_PATH)
     print("  生成的excel文件路径  EXCEL_PATH: %s" % config.EXCEL_PATH)
+    if extraConfig:
+        print("  要过滤的城市列表               : %s" % extraConfig["excludeCity"] or "无")
     print("[config check] end\n")
 
     ifLocalTest = False
@@ -190,7 +207,11 @@ if __name__ == "__main__":
         exit()
 
     try:
-        fullDataSum = calcAreaNumber()
+        cityList = config.CITY_AND_AREA
+        if extraConfig["excludeCity"]:
+            cityList = filter_list(config.CITY_AND_AREA, extraConfig["excludeCity"])
+
+        fullDataSum = calcAreaNumber(cityList)
         processedDataIndex = 0
 
         timerStart, timerEnd = utils.timer()
@@ -209,7 +230,7 @@ if __name__ == "__main__":
 
         utils.progressBar(0)
 
-        for city in config.CITY_AND_AREA:
+        for city in cityList:
             for area in city["areas"]:
                 for i in range(config.PAGE_COUNT):
                     # url拼接
@@ -258,10 +279,10 @@ if __name__ == "__main__":
         elapsedTime = timerEnd()
         elapsedTimeText = utils.formatSeconds(elapsedTime, "HH时 mm分 ss秒")
 
-        print("")
+        print("\n")
         print("总耗时：%s" % elapsedTimeText)
         print("执行完成，请手动关闭程序")
-        os.system("pause")
+        input("Press Enter to exit...")
     except Exception as e:
         print("meet error: %s" % e)
 
