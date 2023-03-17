@@ -1,6 +1,6 @@
 import os
 
-VERSION = 1.4
+VERSION = 1.5
 
 # 每个地区获取的页数
 PAGE_COUNT = 6
