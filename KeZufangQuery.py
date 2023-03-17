@@ -288,3 +288,4 @@ if __name__ == "__main__":
 
         # 启用断档续传功能
         saveTemp(realUrlPrev, house_data)
+        input("Press Enter to exit...")
