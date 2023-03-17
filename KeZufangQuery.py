@@ -62,11 +62,6 @@ def startGetData(url, cityConfig):
     return result
 
 
-def write_to_file(content):
-    with open("chengjiao.txt", "r", encoding="utf-8") as f:
-        f.write(json.dumps(content, ensure_ascii=False) + ",\n")
-
-
 # 读取缓存
 def readTemp():
     result = []
