@@ -15,7 +15,7 @@
 python3 KeZufangQuery.py
 
 # 打包为可执行文件
-Pyinstaller -F --disable-windowed-traceback -i biao.ico KeZufangQuery.py
+Pyinstaller -i biao.ico KeZufangQuery.py --onefile --console
 ```
 
 ## 参考文档

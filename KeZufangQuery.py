@@ -7,12 +7,13 @@ import os
 import re
 
 import config
+import utils
 
 from pyquery import PyQuery as pq
 
 
 def startGetData(url, cityConfig):
-    print("[start] " + url)
+    # print("[start] " + url)
 
     result = []
     doc = pq(url=url)
@@ -57,7 +58,7 @@ def startGetData(url, cityConfig):
         )
         i += 1
 
-    print("[finished]\n")
+    # print("[finished]\n")
     return result
 
 
@@ -125,7 +126,7 @@ def generate_excel_data(houses):
 def write_to_excel(excel_data):
     # 异常捕获
     try:
-        work_book = xlwt.Workbook(encoding="utf-8")
+        work_book = xlwt.Workbook(encoding="utf-8", style_compression=2)
         sheet = work_book.add_sheet("data")
 
         x = 0
@@ -151,8 +152,19 @@ def write_to_excel(excel_data):
         print(e)
 
 
+def calcAreaNumber():
+    sum = 0
+
+    for city in config.CITY_AND_AREA:
+        for area in city["areas"]:
+            sum += 1
+
+    return sum
+
+
 if __name__ == "__main__":
     print("[config check] start")
+    print("  当前版本: %s\n" % config.VERSION)
     print("  当前运行路径                CWD: %s" % config.CWD)
     print("  断点续传文件路径      TEMP_PATH: %s" % config.TEMP_PATH)
     print("  生成的excel文件路径  EXCEL_PATH: %s" % config.EXCEL_PATH)
@@ -178,6 +190,12 @@ if __name__ == "__main__":
         exit()
 
     try:
+        fullDataSum = calcAreaNumber()
+        processedDataIndex = 0
+
+        timerStart, timerEnd = utils.timer()
+        timerStart()
+
         house_data = []
         realUrlPrev = ""
 
@@ -188,6 +206,8 @@ if __name__ == "__main__":
             print("get temp")
             tempUrl = temp[0]
             house_data = temp[1]
+
+        utils.progressBar(0)
 
         for city in config.CITY_AND_AREA:
             for area in city["areas"]:
@@ -201,7 +221,7 @@ if __name__ == "__main__":
                         realUrlPrev = realUrl
 
                     if tempUrl != "" and realUrl != tempUrl:
-                        print("[skip] " + realUrl + "\n")
+                        # print("[skip] " + realUrl + "\n")
                         continue
                     elif realUrl == tempUrl:
                         tempUrl = ""
@@ -227,12 +247,21 @@ if __name__ == "__main__":
                     # 增加延时，避免被 block
                     time.sleep(config.SLEEP_TIME)
 
+                processedDataIndex += 1
+                utils.progressBar(float(processedDataIndex / fullDataSum))
+
         # 数组去重
         # TODO
 
         excel_data = generate_excel_data(house_data)
         write_to_excel(excel_data)
-        print("complete")
+        elapsedTime = timerEnd()
+        elapsedTimeText = utils.formatSeconds(elapsedTime, "HH时 mm分 ss秒")
+
+        print("")
+        print("总耗时：%s" % elapsedTimeText)
+        print("执行完成，请手动关闭程序")
+        os.system("pause")
     except Exception as e:
         print("meet error: %s" % e)
 
