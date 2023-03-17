@@ -183,7 +183,8 @@ if __name__ == "__main__":
     print("  当前运行路径                CWD: %s" % config.CWD)
     print("  断点续传文件路径      TEMP_PATH: %s" % config.TEMP_PATH)
     print("  生成的excel文件路径  EXCEL_PATH: %s" % config.EXCEL_PATH)
-    if extraConfig:
+    if extraConfig != None:
+        print(extraConfig)
         print("  要过滤的城市列表               : %s" % extraConfig["excludeCity"] or "无")
     print("[config check] end\n")
 
@@ -206,19 +207,20 @@ if __name__ == "__main__":
         print("complete")
         exit()
 
+    house_data = []
+    realUrlPrev = ""
+
     try:
         cityList = config.CITY_AND_AREA
-        if extraConfig["excludeCity"]:
-            cityList = filter_list(config.CITY_AND_AREA, extraConfig["excludeCity"])
+        if extraConfig:
+            if extraConfig["excludeCity"]:
+                cityList = filter_list(config.CITY_AND_AREA, extraConfig["excludeCity"])
 
         fullDataSum = calcAreaNumber(cityList)
         processedDataIndex = 0
 
         timerStart, timerEnd = utils.timer()
         timerStart()
-
-        house_data = []
-        realUrlPrev = ""
 
         tempUrl = ""
 
